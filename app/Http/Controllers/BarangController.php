@@ -4,18 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Exports\BarangExport;
 use App\Models\Barang;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class BarangController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, $cabang)
     {
         $keyword = $request->input('keyword');
-        $perPage = $request->input('per_page', 25); // default 25
+        $perPage = $request->input('per_page', 25);
+        $table = $this->getTableName($cabang);
 
-        $query = Barang::where('isDeleted', 0);
+        $query = DB::table($table)->where('isDeleted', 0);
 
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
@@ -28,27 +29,61 @@ class BarangController extends Controller
         $barang = $query->orderBy('grup')->paginate($perPage)->withQueryString();
         $totalQty = $barang->sum('qty');
 
-        return view('barang.index', compact('barang', 'keyword', 'perPage', 'totalQty'));
+        return view('barang.index', compact('barang', 'keyword', 'perPage', 'totalQty', 'cabang'));
     }
 
-    public function create()
+    public function create($cabang)
     {
-        return view('barang.create');
+        return view('barang.create', compact('cabang'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $cabang)
     {
-        Barang::create($request->all());
-        return redirect()->route('barang.index')->with('success', 'Barang ditambahkan');
+        $request->validate([
+            'items' => 'required|string|max:50',
+            'grup' => 'nullable|string|max:30',
+            'merk' => 'nullable|string|max:30',
+            'qty' => 'required|integer|min:0',
+            'min' => 'nullable|integer|min:0',
+            'lokasi' => 'nullable|string|max:30',
+            'hrglist' => 'nullable|numeric|min:0',
+            'hrgmodal' => 'nullable|numeric|min:0',
+            'hrgagen' => 'nullable|numeric|min:0',
+            'hrgecer' => 'nullable|numeric|min:0',
+        ]);
+
+        $table = $this->getTableName($cabang);
+        $data = $request->only([
+            'items',
+            'grup',
+            'merk',
+            'qty',
+            'min',
+            'lokasi',
+            'hrglist',
+            'hrgmodal',
+            'hrgagen',
+            'hrgecer'
+        ]);
+        $data['updated_at'] = now();
+
+        DB::table($table)->insert($data);
+
+        return redirect()->route('barang.index', $cabang)->with('success', 'Barang ditambahkan');
     }
 
-    public function edit($id)
+    public function edit($cabang, $id)
     {
-        $barang = Barang::findOrFail($id);
-        return view('barang.edit', compact('barang'));
+        $table = $this->getTableName($cabang);
+        $barang = DB::table($table)->where('id', $id)->first();
+
+        if (!$barang)
+            abort(404, 'Data tidak ditemukan');
+
+        return view('barang.edit', compact('barang', 'cabang'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $cabang, $id)
     {
         $request->validate([
             'items' => 'required|string|max:50',
@@ -63,23 +98,32 @@ class BarangController extends Controller
             'hrgecer' => 'nullable|numeric',
         ]);
 
-        $barang = Barang::findOrFail($id);
-        $barang->update($request->all());
+        $table = $this->getTableName($cabang);
+        $data = $request->except('_token', '_method');
+        $data['updated_at'] = now();
 
-        return redirect()->route('barang.index')->with('success', 'Barang berhasil diperbarui');
+        DB::table($table)->where('id', $id)->update($data);
+
+        return redirect()->route('barang.index', $cabang)->with('success', 'Barang berhasil diperbarui');
     }
 
-    public function destroy($id)
+    public function destroy($cabang, $id)
     {
-        $barang = Barang::findOrFail($id);
-        $barang->isDeleted = 1;
-        $barang->save();
-        return redirect()->route('barang.index')->with('success', 'Barang dihapus');
+        $table = $this->getTableName($cabang);
+
+        DB::table($table)->where('id', $id)->update([
+            'isDeleted' => 1,
+            'updated_at' => now()
+        ]);
+
+        return redirect()->route('barang.index', $cabang)->with('success', 'Barang dihapus');
     }
 
-    public function report(Request $request)
+    public function report($cabang, Request $request)
     {
-        $query = Barang::where('isDeleted', 0);
+        $table = $this->getTableName($cabang);
+
+        $query = DB::table($table)->where('isDeleted', 0);
 
         if ($request->filled('grup')) {
             $query->where('grup', 'like', '%' . $request->grup . '%');
@@ -99,26 +143,19 @@ class BarangController extends Controller
 
         $barang = $query->orderBy('grup')->get();
 
-        return view('barang.report', compact('barang'));
+        return view('barang.report', compact('barang', 'cabang'));
     }
 
-    public function exportPdf(Request $request)
+    public function exportExcel($cabang, Request $request)
     {
-        $query = $this->getFilteredQuery($request);
-        $barang = $query->orderBy('grup')->get();
-
-        $pdf = Pdf::loadView('barang.report_pdf', compact('barang'));
-        return $pdf->download('laporan-barang.pdf');
+        return Excel::download(new BarangExport($request, $cabang), 'laporan-barang-' . $cabang . '.xlsx');
     }
 
-    public function exportExcel(Request $request)
+    public function getFilteredQuery($cabang, Request $request)
     {
-        return Excel::download(new BarangExport($request), 'laporan-barang.xlsx');
-    }
+        $table = $this->getTableName($cabang);
 
-    public function getFilteredQuery(Request $request)
-    {
-        $query = Barang::where('isDeleted', 0);
+        $query = DB::table($table)->where('isDeleted', 0);
 
         if ($request->filled('grup')) {
             $query->where('grup', 'like', '%' . $request->grup . '%');
@@ -137,5 +174,19 @@ class BarangController extends Controller
         }
 
         return $query;
+    }
+
+    private function getTableName($cabang)
+    {
+        switch ($cabang) {
+            case 'pusat':
+                return 'barang';
+            case 'jeret':
+                return 'barang_jeret';
+            case 'jayanti timur':
+                return 'barang_jt';
+            default:
+                abort(404, 'Cabang tidak dikenal');
+        }
     }
 }

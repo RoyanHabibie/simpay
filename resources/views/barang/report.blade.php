@@ -6,15 +6,18 @@
             <h5>Laporan Stok Barang</h5>
             <small>Tanggal Cetak: {{ now()->format('d-m-Y H:i') }}</small>
         </div>
+
         <div class="mb-3 d-flex gap-2">
             <button class="btn btn-secondary btn-sm" onclick="window.print()">
                 <i class="bi bi-printer"></i> Cetak / Simpan PDF
             </button>
-            <a href="{{ route('barang.export.excel', request()->query()) }}" class="btn btn-success btn-sm">
+            <a href="{{ route('barang.export.excel', [$cabang ?? 'pusat'] + request()->query()) }}"
+                class="btn btn-success btn-sm">
                 <i class="bi bi-file-earmark-excel"></i> Export Excel
             </a>
         </div>
 
+        <!-- Filter -->
         <form method="GET" class="row g-2 mb-3">
             <div class="row align-items-end">
                 <div class="col-md-3">
@@ -42,6 +45,7 @@
             </div>
         </form>
 
+        <!-- Tabel -->
         <div class="table-responsive">
             <table class="table table-bordered table-sm">
                 <thead class="table-dark">
@@ -76,7 +80,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center">Tidak ada data</td>
+                            <td colspan="11" class="text-center">Tidak ada data</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -97,7 +101,9 @@
             }
 
             table {
-                font-size: 11px;
+                font-size: 10px;
+                width: 100%;
+                border-collapse: collapse;
             }
 
             thead {
@@ -107,6 +113,7 @@
             th,
             td {
                 border: 1px solid #000 !important;
+                padding: 4px;
             }
 
             body {

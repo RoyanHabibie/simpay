@@ -1,10 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+    @php $cabang = request()->route('cabang'); @endphp
     <div class="container">
-        <h2 class="mb-4">Edit Barang</h2>
+        <h2 class="mb-4">Edit Barang - {{ ucfirst($cabang) }}</h2>
 
-        <form action="{{ route('barang.update', $barang->id) }}" method="POST">
+        <form action="{{ route('barang.update', [$cabang, $barang->id]) }}" method="POST">
             @csrf
             @method('PUT')
 
@@ -83,7 +84,7 @@
             </div>
 
             <button type="submit" class="btn btn-primary">Update</button>
-            <a href="{{ route('barang.index') }}" class="btn btn-secondary">Batal</a>
+            <a href="{{ route('barang.index', $cabang) }}" class="btn btn-secondary">Batal</a>
         </form>
     </div>
 @endsection

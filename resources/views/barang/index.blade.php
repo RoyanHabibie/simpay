@@ -1,10 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        $cabang = request()->route('cabang'); // ambil parameter dari route
+    @endphp
+
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Data Barang</h2>
-        <a href="{{ route('barang.report') }}" class="btn btn-white">Lihat Laporan</a>
-        <a href="{{ route('barang.create') }}" class="btn btn-primary">+ Tambah Barang</a>
+        <h2>Data Barang - {{ ucfirst($cabang) }}</h2>
+        <div>
+            <a href="{{ route('barang.report', $cabang) }}" class="btn btn-outline-secondary">Lihat Laporan</a>
+            <a href="{{ route('barang.create', $cabang) }}" class="btn btn-primary">+ Tambah Barang</a>
+        </div>
     </div>
 
     <!-- Form Pencarian -->
@@ -60,15 +66,16 @@
                         <td>Rp {{ number_format($b->hrgagen, 0, ',', '.') }}</td>
                         <td>Rp {{ number_format($b->hrgecer, 0, ',', '.') }}</td>
                         <td>
-                            <a href="{{ route('barang.edit', $b->id) }}" class="btn btn-sm btn-outline-warning"
+                            <a href="{{ route('barang.edit', [$cabang, $b->id]) }}" class="btn btn-sm btn-warning"
                                 data-bs-toggle="tooltip" title="Edit Barang">
-                                <i class="bi bi-pencil-square"></i>
+                                <i class="bi bi-pencil"></i>
                             </a>
 
-                            <form action="{{ route('barang.destroy', $b->id) }}" method="POST" class="d-inline">
+                            <form action="{{ route('barang.destroy', [$cabang, $b->id]) }}" method="POST"
+                                class="d-inline">
                                 @csrf @method('DELETE')
                                 <button type="submit" onclick="return confirm('Yakin ingin hapus?')"
-                                    class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Hapus Barang">
+                                    class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="Hapus Barang">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
@@ -76,17 +83,15 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center">Tidak ada data.</td>
+                        <td colspan="11" class="text-center">Tidak ada data.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
 
         <!-- Paginasi -->
-        <div class="align-items-center">
-            <div>
-                {{ $barang->links() }}
-            </div>
+        <div>
+            {{ $barang->links() }}
         </div>
     </div>
 @endsection

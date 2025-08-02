@@ -1,10 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+    @php $cabang = request()->route('cabang'); @endphp
     <div class="container">
-        <h2 class="mb-4">Tambah Barang</h2>
+        <h2 class="mb-4">Tambah Barang - {{ ucfirst($cabang) }}</h2>
 
-        <form action="{{ route('barang.store') }}" method="POST">
+        <form action="{{ route('barang.store', $cabang) }}" method="POST">
             @csrf
 
             <div class="mb-3">
@@ -79,7 +80,7 @@
             </div>
 
             <button type="submit" class="btn btn-success">Simpan</button>
-            <a href="{{ route('barang.index') }}" class="btn btn-secondary">Batal</a>
+            <a href="{{ route('barang.index', $cabang) }}" class="btn btn-secondary">Batal</a>
         </form>
     </div>
 @endsection
