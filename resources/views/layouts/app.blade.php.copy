@@ -26,20 +26,25 @@
             @endphp
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <!-- Dropdown Barang -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {{ Str::startsWith(Route::currentRouteName(), 'barang.') ? 'active' : '' }}"
+                        <a class="nav-link dropdown-toggle {{ request()->is('*barang*') ? 'active' : '' }}"
                             href="#" id="barangDropdown" role="button" data-bs-toggle="dropdown"
                             aria-expanded="false">
                             Barang
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="barangDropdown">
-                            <li><a class="dropdown-item {{ $currentCabang === 'pusat' ? 'active' : '' }}"
-                                    href="{{ route('barang.index', 'pusat') }}">Barang Pusat</a></li>
-                            <li><a class="dropdown-item {{ $currentCabang === 'jeret' ? 'active' : '' }}"
-                                    href="{{ route('barang.index', 'jeret') }}">Barang Jeret</a></li>
-                            <li><a class="dropdown-item {{ $currentCabang === 'jayanti timur' ? 'active' : '' }}"
-                                    href="{{ route('barang.index', 'jayanti timur') }}">Barang Jayanti Timur</a></li>
+                            <li>
+                                <a class="dropdown-item {{ $currentCabang === 'pusat' ? 'active' : '' }}"
+                                    href="{{ route('barang.index', 'pusat') }}">Barang Pusat</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ $currentCabang === 'jeret' ? 'active' : '' }}"
+                                    href="{{ route('barang.index', 'jeret') }}">Barang Jeret</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ $currentCabang === 'jayanti timur' ? 'active' : '' }}"
+                                    href="{{ route('barang.index', 'jayanti timur') }}">Barang Jayanti Timur</a>
+                            </li>
                         </ul>
                     </li>
 
@@ -48,26 +53,9 @@
                             href="{{ route('jasa.index') }}">Jasa</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('barangkeluar.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('keluar.*') ? 'active' : '' }}"
                             href="{{ route('barangkeluar.index') }}">Barang Keluar</a>
                     </li>
-                    @auth
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                                {{ Auth::user()->name }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                {{-- <li><a class="dropdown-item" href="#">Profil</a></li> --}}
-                                <li>
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item">Logout</button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    @endauth
                 </ul>
             </div>
         </div>
