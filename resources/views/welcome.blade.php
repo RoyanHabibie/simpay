@@ -12,7 +12,7 @@
     <div class="absolute inset-0 bg-cover bg-center opacity-10" style="background-image: url('/bg.jpg');"></div>
 
     <div class="z-10 text-center px-4">
-        <img src="/logo.png" alt="Pay Motor Logo" class="mx-auto mb-6 w-40 h-40">
+        <img src="{{ asset('logo.png') }}" alt="Logo" class="mx-auto mb-6 w-40 h-40">
 
         <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">Selamat Datang di Pay Motor</h1>
         <p class="text-gray-600 text-lg mb-8">Sistem Manajemen Transaksi dan Inventaris</p>
