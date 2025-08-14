@@ -2,63 +2,80 @@
 
 namespace App\Exports;
 
-use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\FromView;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Query\Builder;
+use Maatwebsite\Excel\Concerns\FromQuery;              // <- ganti
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithCustomChunkSize;     // <- untuk atur chunk
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 
-class BarangExport implements FromView
+class BarangExport implements FromQuery, WithHeadings, WithMapping, WithCustomChunkSize, WithStrictNullComparison
 {
-    protected $request;
-    protected $cabang;
+    public function __construct(private string $cabang, private string $keyword) {}
 
-    public function __construct(Request $request, $cabang)
+    public function headings(): array
     {
-        $this->request = $request;
-        $this->cabang = $cabang;
+        return ['Items','Grup','Merk','Lokasi','Qty','Harga List','Harga Modal','Harga Agen','Harga Ecer'];
     }
 
-    protected function getTableName()
+    public function query(): Builder
     {
-        switch ($this->cabang) {
-            case 'pusat':
-                return 'barang';
-            case 'jeret':
-                return 'barang_jeret';
-            case 'jayanti timur':
-                return 'barang_jt';
-            default:
-                abort(404, 'Cabang tidak dikenali');
-        }
-    }
+        [$table, $_] = $this->resolveTableAndTitle($this->cabang);
 
-    public function view(): View
-    {
-        $table = $this->getTableName();
-
-        $query = DB::table($table)->where('isDeleted', 0);
-
-        if ($this->request->filled('grup')) {
-            $query->where('grup', 'like', '%' . $this->request->grup . '%');
-        }
-
-        if ($this->request->filled('merk')) {
-            $query->where('merk', 'like', '%' . $this->request->merk . '%');
-        }
-
-        if ($this->request->filled('lokasi')) {
-            $query->where('lokasi', 'like', '%' . $this->request->lokasi . '%');
-        }
-
-        if ($this->request->input('stok_kritis')) {
-            $query->whereColumn('qty', '<', 'min');
-        }
-
-        $barang = $query->orderBy('grup')->get();
-
-        return view('barang.report_excel', [
-            'barang' => $barang,
-            'cabang' => $this->cabang,
+        $q = DB::table($table)->select([
+            'items', 'grup', 'merk', 'lokasi', 'qty', 'hrglist', 'hrgmodal', 'hrgagen', 'hrgecer'
         ]);
+
+        if (Schema::hasColumn($table, 'isDeleted')) {
+            $q->where('isDeleted', 0);
+        }
+
+        if ($this->keyword !== '') {
+            $like = "%{$this->keyword}%";
+            $q->where(function ($w) use ($like) {
+                $w->where('items', 'like', $like)
+                  ->orWhere('grup',  'like', $like)
+                  ->orWhere('merk',  'like', $like);
+            });
+        }
+
+        // Urutan yang sama dengan tampilan
+        $q->orderBy('grup')->orderBy('merk')->orderBy('items');
+
+        return $q;
+    }
+
+    public function map($row): array
+    {
+        return [
+            (string)$row->items,
+            (string)$row->grup,
+            (string)$row->merk,
+            (string)($row->lokasi ?? ''),
+            (int)($row->qty ?? 0),
+            (float)($row->hrglist ?? 0),
+            (float)($row->hrgmodal ?? 0),
+            (float)($row->hrgagen ?? 0),
+            (float)($row->hrgecer ?? 0),
+        ];
+    }
+
+    public function chunkSize(): int
+    {
+        // 1000–2000 aman; sesuaikan jika server kuat
+        return 2000;
+    }
+
+    private function resolveTableAndTitle(string $cabang): array
+    {
+        $key = strtolower($cabang);
+        return match ($key) {
+            'pusat'         => ['barang',      'Pusat (Motor)'],
+            'jeret'         => ['barang_jeret','Mobil (Jeret)'],
+            'jayanti timur' => ['barang_jt',   'Jayanti Timur (Motor)'],
+            default         => ['barang',      ucfirst($cabang)],
+        };
     }
 }

@@ -51,6 +51,27 @@
                         <a class="nav-link {{ request()->routeIs('barangkeluar.*') ? 'active' : '' }}"
                             href="{{ route('barangkeluar.index') }}">Barang Keluar</a>
                     </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('laporan.*') ? 'active' : '' }}"
+                            href="#" data-bs-toggle="dropdown">
+                            Laporan
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li class="dropdown-header">Motor (Pusat)</li>
+                            <li><a class="dropdown-item {{ request()->fullUrlIs('*lokasi=pusat*') ? 'active' : '' }}"
+                                    href="{{ route('laporan.keluar', ['lokasi' => 'pusat', 'awal' => now()->toDateString(), 'akhir' => now()->toDateString(), 'mode' => 'detail']) }}">
+                                    Barang Keluar</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li class="dropdown-header">Jayanti Timur</li>
+                            <li><a class="dropdown-item {{ request()->fullUrlIs('*lokasi=jt*') ? 'active' : '' }}"
+                                    href="{{ route('laporan.keluar', ['lokasi' => 'jt', 'awal' => now()->toDateString(), 'akhir' => now()->toDateString(), 'mode' => 'detail']) }}">
+                                    Barang Keluar</a></li>
+                        </ul>
+                    </li>
+
                     @auth
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"

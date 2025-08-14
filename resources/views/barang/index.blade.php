@@ -4,11 +4,31 @@
     @php
         $cabang = request()->route('cabang'); // ambil parameter dari route
     @endphp
+    @if (session('error'))
+        <div class="alert alert-warning">{{ session('error') }}</div>
+    @endif
+    @if (($barang->total() ?? 0) > 1000)
+        <div class="alert alert-info">
+            Dataset besar terdeteksi ({{ number_format($barang->total()) }} baris).
+            Disarankan gunakan <strong>Export Excel</strong> agar lebih cepat & stabil.
+        </div>
+    @endif
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    {{-- <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Data Barang - {{ ucfirst($cabang) }}</h2>
         <div>
             <a href="{{ route('barang.report', $cabang) }}" class="btn btn-outline-secondary">Lihat Laporan</a>
+            <a href="{{ route('barang.create', $cabang) }}" class="btn btn-primary">+ Tambah Barang</a>
+        </div>
+    </div> --}}
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Data Barang - {{ ucfirst($cabang) }}</h2>
+        <div class="btn-group">
+            <a href="{{ route('barang.export.pdf', array_merge(['cabang' => $cabang], request()->only('keyword'))) }}"
+                class="btn btn-outline-danger">Export PDF</a>
+            <a href="{{ route('barang.export.excel', array_merge(['cabang' => $cabang], request()->only('keyword'))) }}"
+                class="btn btn-outline-success">Export Excel</a>
             <a href="{{ route('barang.create', $cabang) }}" class="btn btn-primary">+ Tambah Barang</a>
         </div>
     </div>
@@ -33,7 +53,8 @@
 
     <!-- Tabel -->
     <div class="table-responsive">
-        <p class="text-muted">Menampilkan {{ $barang->firstItem() }} – {{ $barang->lastItem() }} dari {{ $barang->total() }}
+        <p class="text-muted">Menampilkan {{ $barang->firstItem() }} – {{ $barang->lastItem() }} dari
+            {{ $barang->total() }}
             data, Total Qty: <strong>{{ $totalQty }}</strong></p>
         <table class="table table-bordered table-hover table-striped">
             <thead class="table-dark">

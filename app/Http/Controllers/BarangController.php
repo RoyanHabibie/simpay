@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Exports\BarangExport;
-use App\Models\Barang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Schema;
 
 class BarangController extends Controller
 {
@@ -119,38 +120,6 @@ class BarangController extends Controller
         return redirect()->route('barang.index', $cabang)->with('success', 'Barang dihapus');
     }
 
-    public function report($cabang, Request $request)
-    {
-        $table = $this->getTableName($cabang);
-
-        $query = DB::table($table)->where('isDeleted', 0);
-
-        if ($request->filled('grup')) {
-            $query->where('grup', 'like', '%' . $request->grup . '%');
-        }
-
-        if ($request->filled('merk')) {
-            $query->where('merk', 'like', '%' . $request->merk . '%');
-        }
-
-        if ($request->filled('lokasi')) {
-            $query->where('lokasi', 'like', '%' . $request->lokasi . '%');
-        }
-
-        if ($request->input('stok_kritis')) {
-            $query->whereColumn('qty', '<', 'min');
-        }
-
-        $barang = $query->orderBy('grup')->get();
-
-        return view('barang.report', compact('barang', 'cabang'));
-    }
-
-    public function exportExcel($cabang, Request $request)
-    {
-        return Excel::download(new BarangExport($request, $cabang), 'laporan-barang-' . $cabang . '.xlsx');
-    }
-
     public function getFilteredQuery($cabang, Request $request)
     {
         $table = $this->getTableName($cabang);
@@ -188,5 +157,94 @@ class BarangController extends Controller
             default:
                 abort(404, 'Cabang tidak dikenal');
         }
+    }
+
+    public function exportPdf(Request $r, string $cabang)
+    {
+        $keyword = trim($r->input('keyword', ''));
+        [$table, $judul] = $this->resolveTableAndTitle($cabang);
+
+        // hitung dulu
+        $count = DB::table($table)
+            ->when(Schema::hasColumn($table, 'isDeleted'), fn($q) => $q->where('isDeleted', 0))
+            ->when($keyword !== '', function ($q) use ($keyword) {
+                $like = "%{$keyword}%";
+                $q->where(fn($w) => $w->where('items', 'like', $like)->orWhere('grup', 'like', $like)->orWhere('merk', 'like', $like));
+            })
+            ->count();
+
+        $limit = 1000; // sesuaikan ambang yang aman
+        if ($count > $limit) {
+            return back()->with('error', "Data terlalu banyak untuk PDF ({$count} baris). Gunakan Excel atau perketat pencarian.");
+        }
+
+        // ambil rows setelah lolos limit
+        $rows = DB::table($table)
+            ->when(Schema::hasColumn($table, 'isDeleted'), fn($q) => $q->where('isDeleted', 0))
+            ->when($keyword !== '', function ($q) use ($keyword) {
+                $like = "%{$keyword}%";
+                $q->where(fn($w) => $w->where('items', 'like', $like)->orWhere('grup', 'like', $like)->orWhere('merk', 'like', $like));
+            })
+            ->selectRaw('items, grup, merk, lokasi, qty, hrglist, hrgmodal, hrgagen, hrgecer')
+            ->orderBy('grup')->orderBy('merk')->orderBy('items')
+            ->get();
+
+        $totalQty = $rows->sum('qty');
+
+        // opsi hemat memori
+        ini_set('memory_limit', '512M'); // quick win
+        Pdf::setOptions([
+            'dpi' => 96,                       // turunkan DPI
+            'defaultFont' => 'DejaVu Sans',    // 1 font saja
+            'isFontSubsettingEnabled' => true, // subset font hemat memori
+            'isHtml5ParserEnabled' => true,    // parser HTML5 lebih stabil
+            'tempDir' => storage_path('app/dompdf'), // cache ke disk
+            'chroot' => public_path(),         // batasi root (opsional)
+        ]);
+
+        return Pdf::loadView('barang.export_pdf', [
+            'judul' => "Data Barang - {$judul}",
+            'cabang' => $cabang,
+            'keyword' => $keyword,
+            'rows' => $rows,
+            'totalQty' => $totalQty,
+        ])
+            ->setPaper('a4', 'landscape')
+            ->download("data-barang-{$cabang}.pdf");
+    }
+
+    public function exportExcel(Request $r, string $cabang)
+    {
+        $keyword = trim($r->input('keyword', ''));
+        return Excel::download(new BarangExport($cabang, $keyword), "data-barang-{$cabang}.xlsx");
+    }
+
+    /** Query dasar index/export – filter keyword + hide isDeleted */
+    private function baseQuery(string $table, string $keyword)
+    {
+        return DB::table($table)
+            ->when(Schema::hasColumn($table, 'isDeleted'), fn($q) => $q->where('isDeleted', 0))
+            ->when($keyword !== '', function ($q) use ($keyword) {
+                $like = "%{$keyword}%";
+                $q->where(function ($w) use ($like) {
+                    $w->where('items', 'like', $like)
+                        ->orWhere('grup', 'like', $like)
+                        ->orWhere('merk', 'like', $like);
+                });
+            })
+            ->selectRaw('id, items, grup, merk, lokasi, qty, hrglist, hrgmodal, hrgagen, hrgecer')
+            ->orderBy('grup')->orderBy('merk')->orderBy('items');
+    }
+
+    /** Map nama cabang → tabel + judul */
+    private function resolveTableAndTitle(string $cabang): array
+    {
+        $key = strtolower($cabang);
+        return match ($key) {
+            'pusat' => ['barang', 'Pusat (Motor)'],
+            'jeret' => ['barang_jeret', 'Mobil (Jeret)'],
+            'jayanti timur' => ['barang_jt', 'Jayanti Timur (Motor)'],
+            default => ['barang', ucfirst($cabang)],
+        };
     }
 }
