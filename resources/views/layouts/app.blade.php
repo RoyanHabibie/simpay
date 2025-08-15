@@ -47,28 +47,77 @@
                         <a class="nav-link {{ request()->routeIs('jasa.*') ? 'active' : '' }}"
                             href="{{ route('jasa.index') }}">Jasa</a>
                     </li>
+
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('barangkeluar.*') ? 'active' : '' }}"
                             href="{{ route('barangkeluar.index') }}">Barang Keluar</a>
                     </li>
 
+                    <!-- Dropdown Laporan -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {{ request()->routeIs('laporan.*') ? 'active' : '' }}"
                             href="#" data-bs-toggle="dropdown">
                             Laporan
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
+                            <!-- Motor (Pusat) -->
                             <li class="dropdown-header">Motor (Pusat)</li>
-                            <li><a class="dropdown-item {{ request()->fullUrlIs('*lokasi=pusat*') ? 'active' : '' }}"
-                                    href="{{ route('laporan.keluar', ['lokasi' => 'pusat', 'awal' => now()->toDateString(), 'akhir' => now()->toDateString(), 'mode' => 'detail']) }}">
-                                    Barang Keluar</a></li>
+                            <li>
+                                <a class="dropdown-item {{ request()->fullUrlIs('*lokasi=pusat*') ? 'active' : '' }}"
+                                    href="{{ route('laporan.keluar', [
+                                        'lokasi' => 'pusat',
+                                        'awal' => now()->toDateString(),
+                                        'akhir' => now()->toDateString(),
+                                        'mode' => 'detail',
+                                    ]) }}">
+                                    Barang Keluar
+                                </a>
+                            </li>
+
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
+
+                            <!-- Mobil (Jeret) -->
+                            <li class="dropdown-header">Mobil (Jeret)</li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('laporan.mobil.rekap') ? 'active' : '' }}"
+                                    href="{{ route('laporan.mobil.rekap', [
+                                        'awal' => now()->toDateString(),
+                                        'akhir' => now()->toDateString(),
+                                        'status' => 'semua',
+                                    ]) }}">
+                                    Rekap Transaksi
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('laporan.mobil.pendapatan') ? 'active' : '' }}"
+                                    href="{{ route('laporan.mobil.pendapatan', [
+                                        'awal' => now()->toDateString(),
+                                        'akhir' => now()->toDateString(),
+                                        'status' => 'semua',
+                                    ]) }}">
+                                    Pendapatan
+                                </a>
+                            </li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <!-- Jayanti Timur -->
                             <li class="dropdown-header">Jayanti Timur</li>
-                            <li><a class="dropdown-item {{ request()->fullUrlIs('*lokasi=jt*') ? 'active' : '' }}"
-                                    href="{{ route('laporan.keluar', ['lokasi' => 'jt', 'awal' => now()->toDateString(), 'akhir' => now()->toDateString(), 'mode' => 'detail']) }}">
-                                    Barang Keluar</a></li>
+                            <li>
+                                <a class="dropdown-item {{ request()->fullUrlIs('*lokasi=jt*') ? 'active' : '' }}"
+                                    href="{{ route('laporan.keluar', [
+                                        'lokasi' => 'jt',
+                                        'awal' => now()->toDateString(),
+                                        'akhir' => now()->toDateString(),
+                                        'mode' => 'detail',
+                                    ]) }}">
+                                    Barang Keluar
+                                </a>
+                            </li>
                         </ul>
                     </li>
 

@@ -39,7 +39,7 @@
 
     @if ($barangkeluar->count())
         <div class="alert alert-info d-flex justify-content-between align-items-center">
-            <div><strong>Total Qty:</strong> {{ $totalQty }}</div>
+            <div><strong>Total Qty:</strong> {{ number_format($totalQty, 0, ',', '.') }}</div>
             <div><strong>Total Nilai:</strong> Rp {{ number_format($totalValue, 0, ',', '.') }}</div>
         </div>
     @endif

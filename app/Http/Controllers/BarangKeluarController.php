@@ -14,33 +14,48 @@ class BarangKeluarController extends Controller
      */
     public function index(Request $request)
     {
-        $keyword = $request->input('keyword');
-        $tanggal = $request->input('tgl', now()->toDateString());
-        $perPage = $request->input('per_page', 25);
+        $perPage = (int) $request->input('per_page', 25);
+        $keyword = trim((string) $request->input('keyword', ''));
+        $tanggal = $request->input('tgl');
+
+        // First visit: tidak ada query param => paksa pakai tanggal hari ini
+        $firstVisit = !$request->hasAny(['keyword', 'tgl', 'per_page', 'page']);
+        if ($firstVisit) {
+            $tanggal = now()->toDateString();
+        }
 
         $query = BarangKeluar::with('barang');
 
-        if ($keyword) {
+        if ($keyword !== '') {
             $query->whereHas('barang', function ($q) use ($keyword) {
-                $q->where('items', 'like', "%$keyword%");
+                $q->where('items', 'like', "%{$keyword}%")
+                    ->orWhere('grup', 'like', "%{$keyword}%")
+                    ->orWhere('merk', 'like', "%{$keyword}%");
             });
         }
 
-        if ($request->has('tgl') && $tanggal !== '') {
+        if (!empty($tanggal)) {
             $query->whereDate('tgl', $tanggal);
         }
 
-        // Clone query sebelum paginasi, untuk sum
-        $sumQuery = clone $query;
+        // totals dalam satu hit
+        $totals = (clone $query)
+            ->selectRaw('COALESCE(SUM(qty),0) as total_qty, COALESCE(SUM(qty*hrg),0) as total_value')
+            ->first();
 
-        // Jalankan paginasi
-        $barangkeluar = $query->orderByDesc('tgl')->paginate($perPage)->withQueryString();
+        $barangkeluar = $query->orderByDesc('tgl')
+            ->paginate($perPage)
+            ->withQueryString();
 
-        // Hitung total qty dan total nilai
-        $totalQty = $sumQuery->sum('qty');
-        $totalValue = $sumQuery->selectRaw('SUM(qty * hrg) as total')->value('total');
-
-        return view('barangkeluar.index', compact('barangkeluar', 'keyword', 'tanggal', 'perPage', 'totalQty', 'totalValue'));
+        return view('barangkeluar.index', [
+            'barangkeluar' => $barangkeluar,
+            'keyword' => $keyword,
+            'tanggal' => $tanggal,        // <= pastikan dikirim ke blade
+            'perPage' => $perPage,
+            'totalQty' => $totals->total_qty,
+            'totalValue' => $totals->total_value,
+            'isDefaultToday' => $firstVisit,    // opsional, kalau mau dipakai di UI
+        ]);
     }
 
     /**
