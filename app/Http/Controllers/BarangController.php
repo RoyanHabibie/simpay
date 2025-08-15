@@ -30,7 +30,36 @@ class BarangController extends Controller
         $barang = $query->orderBy('grup')->paginate($perPage)->withQueryString();
         $totalQty = $barang->sum('qty');
 
-        return view('barang.index', compact('barang', 'keyword', 'perPage', 'totalQty', 'cabang'));
+        $grupList = DB::table($table)
+            ->where('isDeleted', 0)
+            ->where('grup', '!=', '')
+            ->distinct()->orderBy('grup')
+            ->pluck('grup');
+
+        $merkList = DB::table($table)
+            ->where('isDeleted', 0)
+            ->where('merk', '!=', '')
+            ->distinct()->orderBy('merk')
+            ->pluck('merk');
+
+        return view('barang.index', compact('barang', 'keyword', 'perPage', 'totalQty', 'cabang', 'grupList', 'merkList'));
+    }
+
+    public function merkList(Request $r, string $cabang)
+    {
+        $table = $this->getTableName($cabang);
+
+        $q = DB::table($table)
+            ->where('isDeleted', 0)
+            ->where('merk', '!=', '');
+
+        if ($r->filled('grup')) {
+            $q->where('grup', $r->grup);
+        }
+
+        $merk = $q->distinct()->orderBy('merk')->pluck('merk');
+
+        return response()->json($merk);
     }
 
     public function create($cabang)
@@ -246,5 +275,97 @@ class BarangController extends Controller
             'jayanti timur' => ['barang_jt', 'Jayanti Timur (Motor)'],
             default => ['barang', ucfirst($cabang)],
         };
+    }
+
+    private function roundExpr(string $expr, ?int $step, string $mode = 'round'): string
+    {
+        // step: null/0 => round ke integer; 100/500/1000 => pembulatan ke kelipatan tsb
+        if (empty($step) || $step <= 1) {
+            return "ROUND($expr)";
+        }
+        // mode: round/ceil/floor ke kelipatan step
+        return match ($mode) {
+            'ceil' => "CEIL(($expr) / $step) * $step",
+            'floor' => "FLOOR(($expr) / $step) * $step",
+            default => "ROUND(($expr) / $step) * $step",
+        };
+    }
+
+    /**
+     * (Opsional) Kalau mau halaman terpisah untuk form bulk
+     */
+    public function bulkForm(string $cabang)
+    {
+        $table = $this->getTableName($cabang);
+        $grupList = DB::table($table)->where('isDeleted', 0)->distinct()->orderBy('grup')->pluck('grup');
+        $merkList = DB::table($table)->where('isDeleted', 0)->distinct()->orderBy('merk')->pluck('merk');
+
+        return view('barang.bulk', compact('cabang', 'grupList', 'merkList'));
+    }
+
+    /**
+     * Eksekusi update massal
+     */
+    public function bulkUpdate(Request $r, string $cabang)
+    {
+        $r->validate([
+            'grup' => 'nullable|string|max:50',
+            'merk' => 'nullable|string|max:50',
+            'disc_modal' => 'nullable|numeric',   // persen, bisa negatif
+            'disc_agen' => 'nullable|numeric',   // persen, bisa negatif
+            'round_step' => 'nullable|integer|in:0,1,50,100,500,1000',
+            'round_mode' => 'nullable|in:round,ceil,floor',
+            'konfirmasi' => 'required|accepted',  // checkbox “saya yakin”
+        ]);
+
+        $table = $this->getTableName($cabang);
+        $roundStep = (int) ($r->input('round_step', 0));
+        $roundMode = $r->input('round_mode', 'round');
+
+        // Builder dasar
+        $base = DB::table($table)->where('isDeleted', 0);
+        if ($r->filled('grup'))
+            $base->where('grup', $r->grup);
+        if ($r->filled('merk'))
+            $base->where('merk', $r->merk);
+
+        // Hitung target baris (buat info)
+        $target = (clone $base)->count();
+        if ($target === 0) {
+            return back()->with('error', 'Tidak ada data yang cocok dengan filter.');
+        }
+
+        // Siapkan ekspresi update
+        $updates = [];
+
+        if ($r->filled('disc_modal')) {
+            $f = 1 + ((float) $r->disc_modal / 100.0); // misal -10 → 0.9
+            // pastikan tidak negatif: GREATEST(…,0)
+            $expr = "GREATEST(" . $this->roundExpr("hrgmodal * $f", $roundStep, $roundMode) . ", 0)";
+            $updates['hrgmodal'] = DB::raw($expr);
+        }
+
+        if ($r->filled('disc_agen')) {
+            $f = 1 + ((float) $r->disc_agen / 100.0);
+            $expr = "GREATEST(" . $this->roundExpr("hrgagen * $f", $roundStep, $roundMode) . ", 0)";
+            $updates['hrgagen'] = DB::raw($expr);
+        }
+
+        // Kalau tidak ada field yang diubah
+        if (empty($updates)) {
+            return back()->with('error', 'Tidak ada perubahan harga yang dipilih.');
+        }
+
+        // Eksekusi
+        DB::beginTransaction();
+        try {
+            $affected = $base->update($updates); // updated_at ikut auto dengan trigger timestamp default
+            DB::commit();
+
+            return back()->with('success', "Harga berhasil diupdate pada $affected dari $target item.");
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal update: ' . $e->getMessage());
+        }
     }
 }

@@ -34,6 +34,10 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}', [BarangController::class, 'update'])->name('barang.update');
         Route::delete('/{id}', [BarangController::class, 'destroy'])->name('barang.destroy');
 
+        Route::get('/bulk', [BarangController::class, 'bulkForm'])->name('barang.bulk.form');
+        Route::post('/bulk', [BarangController::class, 'bulkUpdate'])->name('barang.bulk.update');
+        Route::get('/merk-list', [BarangController::class, 'merkList'])->name('barang.merk.list');
+
         // Report barang
         // Route::get('/report', [BarangController::class, 'report'])->name('barang.report');
         // Route::get('/report/excel', [BarangController::class, 'exportExcel'])->name('barang.export.excel');
