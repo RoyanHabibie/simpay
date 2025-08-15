@@ -26,6 +26,11 @@
             @endphp
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+                            href="{{ route('dashboard') }}">Dashboard</a>
+                    </li>
+
                     <!-- Dropdown Barang -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {{ Str::startsWith(Route::currentRouteName(), 'barang.') ? 'active' : '' }}"
