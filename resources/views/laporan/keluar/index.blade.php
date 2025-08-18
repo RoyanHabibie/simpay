@@ -2,8 +2,19 @@
 
 @section('content')
     <div class="container">
-        <h3 class="mb-3">Laporan Barang Keluar <small
-                class="text-muted">({{ $lokasi === 'jt' ? 'Jayanti Timur' : 'Pusat' }})</small></h3>
+        @php
+            $lokasiLabel =
+                [
+                    'pusat' => 'Pusat',
+                    'jt' => 'Jayanti Timur',
+                    'jeret' => 'Mobil - Jeret',
+                ][$lokasi] ?? ucfirst($lokasi);
+        @endphp
+
+        <h3 class="mb-3">
+            Laporan Barang Keluar
+            <small class="text-muted">({{ $lokasiLabel }})</small>
+        </h3>
 
         <form class="row g-2 align-items-end mb-3">
             <div class="col-auto">
@@ -18,6 +29,7 @@
                 <label class="form-label">Lokasi</label>
                 <select name="lokasi" class="form-select">
                     <option value="pusat" {{ $lokasi === 'pusat' ? 'selected' : '' }}>Pusat (Motor)</option>
+                    <option value="jeret" {{ $lokasi === 'jeret' ? 'selected' : '' }}>Jeret (Mobil)</option>
                     <option value="jt" {{ $lokasi === 'jt' ? 'selected' : '' }}>Jayanti Timur (Motor)</option>
                 </select>
             </div>

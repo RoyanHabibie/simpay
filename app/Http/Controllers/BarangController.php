@@ -174,18 +174,14 @@ class BarangController extends Controller
         return $query;
     }
 
-    private function getTableName($cabang)
+    private function getTableName(string $cabang): string
     {
-        switch ($cabang) {
-            case 'pusat':
-                return 'barang';
-            case 'jeret':
-                return 'barang_jeret';
-            case 'jayanti timur':
-                return 'barang_jt';
-            default:
-                abort(404, 'Cabang tidak dikenal');
-        }
+        return match (strtolower($cabang)) {
+            'pusat' => 'barang',
+            'jeret', 'mobil' => 'barang_jeret',
+            'jayanti_timur' => 'barang_jt',
+            default => abort(404, 'Cabang tidak dikenal'),
+        };
     }
 
     public function exportPdf(Request $r, string $cabang)
@@ -268,13 +264,14 @@ class BarangController extends Controller
     /** Map nama cabang → tabel + judul */
     private function resolveTableAndTitle(string $cabang): array
     {
-        $key = strtolower($cabang);
-        return match ($key) {
-            'pusat' => ['barang', 'Pusat (Motor)'],
-            'jeret' => ['barang_jeret', 'Mobil (Jeret)'],
-            'jayanti timur' => ['barang_jt', 'Jayanti Timur (Motor)'],
-            default => ['barang', ucfirst($cabang)],
+        $table = $this->getTableName($cabang);
+        $title = match (strtolower($cabang)) {
+            'pusat' => 'Pusat (Motor)',
+            'jeret', 'mobil' => 'Mobil (Jeret)',
+            'jayanti_timur' => 'Jayanti Timur (Motor)',
+            default => ucfirst($cabang),
         };
+        return [$table, $title];
     }
 
     private function roundExpr(string $expr, ?int $step, string $mode = 'round'): string
@@ -355,6 +352,8 @@ class BarangController extends Controller
         if (empty($updates)) {
             return back()->with('error', 'Tidak ada perubahan harga yang dipilih.');
         }
+
+        $updates['updated_at'] = now();
 
         // Eksekusi
         DB::beginTransaction();

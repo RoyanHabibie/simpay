@@ -44,12 +44,24 @@
                 <input type="number" id="qty" name="qty" class="form-control">
             </div>
 
-            {{-- Harga Pilihan --}}
+            {{-- Harga (bisa pilih atau ketik) --}}
             <div class="mb-3">
-                <label for="hrg" class="form-label">Harga</label>
-                <select name="hrg" id="hrg" class="form-select">
-                    <option value="">Pilih harga</option>
-                </select>
+                <label class="form-label" for="hrg_input">Harga</label>
+                <div class="input-group">
+                    {{-- input manual --}}
+                    <input type="number" id="hrg_input" class="form-control" inputmode="numeric" step="1"
+                        min="0" placeholder="Atau ketik harga manual">
+
+                    {{-- select untuk saran harga --}}
+                    <select id="hrg_select" class="form-select">
+                        <option value="">Pilih harga</option>
+                    </select>
+
+                </div>
+
+                {{-- field yang dikirim ke server --}}
+                <input type="hidden" name="hrg" id="hrg">
+                <div class="form-text">Pilih salah satu harga satu di kanan, atau ketik manual di kiri.</div>
             </div>
 
             <button type="submit" class="btn btn-success">Simpan</button>
@@ -139,26 +151,50 @@
                 const hrgagen = $(this).data('hrgagen');
                 const hrgecer = $(this).data('hrgecer');
 
-                // Isi field
+                // isi field yang sudah ada
                 $('#idbarang').val(id);
                 $('#barangText').val(items);
                 $('#grup').val(grup);
                 $('#merk').val(merk);
 
-                // Isi select harga
-                const hargaSelect = $('#hrg');
-                hargaSelect.empty();
-                hargaSelect.append(`<option value="">Pilih harga</option>`);
-                hargaSelect.append(
-                `<option value="${hrglist}">List - Rp ${formatRupiah(hrglist)}</option>`);
-                hargaSelect.append(
-                `<option value="${hrgagen}">Agen - Rp ${formatRupiah(hrgagen)}</option>`);
-                hargaSelect.append(
-                `<option value="${hrgecer}">Ecer - Rp ${formatRupiah(hrgecer)}</option>`);
+                // ==== hanya bagian ini yang beda: isi select saran + kosongkan input ====
+                const $sel = $('#hrg_select');
+                $sel.empty().append('<option value="">Pilih harga</option>');
+                [
+                    ['List', hrglist],
+                    ['Agen', hrgagen],
+                    ['Ecer', hrgecer]
+                ]
+                .filter(x => x[1] !== undefined && x[1] !== null && x[1] !== '' && Number(x[1]) >= 0)
+                    .forEach(([label, val]) => {
+                        $sel.append(
+                            `<option value="${val}">${label}: Rp ${Number(val).toLocaleString('id-ID')}</option>`
+                        );
+                    });
 
-                // Tutup modal (pakai Bootstrap 5)
+                // reset input & hidden
+                $('#hrg_input').val('');
+                $('#hrg').val('');
+
+                // tutup modal (Bootstrap 5)
                 const modal = bootstrap.Modal.getInstance(document.getElementById('modalBarang'));
                 modal.hide();
+            });
+
+            // Sinkronisasi pilih → hidden + isi input
+            $('#hrg_select').on('change', function() {
+                const val = $(this).val();
+                $('#hrg_input').val(val);
+                $('#hrg').val(val);
+            });
+
+            // Ketik manual → tulis ke hidden & kosongkan pilihan select
+            $('#hrg_input').on('input', function() {
+                const val = this.value;
+                $('#hrg').val(val);
+                if (val !== '') {
+                    $('#hrg_select').val('');
+                }
             });
 
             // Fungsi format rupiah

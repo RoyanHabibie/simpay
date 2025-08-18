@@ -43,8 +43,8 @@
                                     href="{{ route('barang.index', 'pusat') }}">Barang Pusat</a></li>
                             <li><a class="dropdown-item {{ $currentCabang === 'jeret' ? 'active' : '' }}"
                                     href="{{ route('barang.index', 'jeret') }}">Barang Jeret</a></li>
-                            <li><a class="dropdown-item {{ $currentCabang === 'jayanti timur' ? 'active' : '' }}"
-                                    href="{{ route('barang.index', 'jayanti timur') }}">Barang Jayanti Timur</a></li>
+                            <li><a class="dropdown-item {{ $currentCabang === 'jayanti_timur' ? 'active' : '' }}"
+                                    href="{{ route('barang.index', 'jayanti_timur') }}">Barang Jayanti Timur</a></li>
                         </ul>
                     </li>
 
@@ -103,6 +103,17 @@
                                         'status' => 'semua',
                                     ]) }}">
                                     Pendapatan
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->fullUrlIs('*lokasi=jeret*') ? 'active' : '' }}"
+                                    href="{{ route('laporan.keluar', [
+                                        'lokasi' => 'jeret',
+                                        'awal' => now()->toDateString(),
+                                        'akhir' => now()->toDateString(),
+                                        'mode' => 'detail',
+                                    ]) }}">
+                                    Barang Keluar
                                 </a>
                             </li>
 

@@ -4,39 +4,49 @@ namespace App\Http\Controllers;
 
 use App\Models\Jasa;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class JasaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
-        $keyword = $request->input('keyword');
-        $perPage = $request->input('per_page', 25); // default 25
+        $request->validate([
+            'keyword' => 'nullable|string|max:50',
+            'per_page' => 'nullable|integer|min:5|max:200',
+            'sort' => 'nullable|in:name,code,price',
+            'dir' => 'nullable|in:asc,desc',
+        ]);
 
-        $query = Jasa::query();
+        $perPage = (int) $request->input('per_page', 25);
+        $perPage = min(max($perPage, 5), 200);
 
-        if ($keyword) {
-            $query->where('NameOfServ', 'like', "%$keyword%");
+        $keyword = trim((string) $request->input('keyword', ''));
+        $sortMap = ['name' => 'NameOfServ', 'code' => 'ServCode', 'price' => 'ServPrice'];
+        $sortCol = $sortMap[$request->input('sort', 'name')] ?? 'NameOfServ';
+        $dir = $request->input('dir', 'asc');
+
+        $q = Jasa::query();
+
+        if ($keyword !== '') {
+            $like = "%{$keyword}%";
+            $q->where(function ($w) use ($like) {
+                $w->where('NameOfServ', 'like', $like)
+                    ->orWhere('ServCode', 'like', $like);
+            });
         }
 
-        $jasa = $query->paginate($perPage)->withQueryString();
+        $jasa = $q->orderBy($sortCol, $dir)
+            ->paginate($perPage)
+            ->withQueryString();
 
-        return view('jasa.index', compact('jasa', 'keyword', 'perPage'));
+        return view('jasa.index', compact('jasa', 'keyword', 'perPage', 'sortCol', 'dir'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('jasa.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -45,50 +55,42 @@ class JasaController extends Controller
             'ServPrice' => 'required|numeric|min:0',
         ]);
 
+        // (opsional) seragamkan kode jasa
+        // $request->merge(['ServCode' => strtoupper($request->ServCode)]);
+
         Jasa::create($request->only(['ServCode', 'NameOfServ', 'ServPrice']));
 
         return redirect()->route('jasa.index')->with('success', 'Data jasa berhasil ditambahkan.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(Jasa $jasa)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        $jasa = Jasa::findOrFail($id);
         return view('jasa.edit', compact('jasa'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Jasa $jasa)
     {
         $request->validate([
             'NameOfServ' => 'required|string|max:100',
             'ServPrice' => 'required|numeric|min:0',
+            // kalau suatu hari ServCode boleh diubah:
+            // 'ServCode'   => 'required|string|max:10|unique:jasa,ServCode,' . $jasa->id,
         ]);
 
-        $jasa = Jasa::findOrFail($id);
         $jasa->update($request->only(['NameOfServ', 'ServPrice']));
 
         return redirect()->route('jasa.index')->with('success', 'Data jasa berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
+    public function destroy(Jasa $jasa)
     {
-        $jasa = Jasa::findOrFail($id);
+        // Cegah hapus jika sudah dipakai transaksi (transjasa)
+        $dipakai = DB::table('transjasa')->where('idjasa', $jasa->id)->exists();
+        if ($dipakai) {
+            return back()->with('error', 'Tidak bisa dihapus: jasa sudah dipakai pada transaksi.');
+        }
+
+        // Kalau mau soft delete, aktifkan SoftDeletes di model Jasa lalu ganti ke $jasa->delete();
         $jasa->delete();
 
         return redirect()->route('jasa.index')->with('success', 'Data jasa berhasil dihapus.');

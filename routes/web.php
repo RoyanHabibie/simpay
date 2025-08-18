@@ -2,9 +2,10 @@
 
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\BarangKeluarController;
-use App\Http\Controllers\BarangKeluarMobilController;
+use App\Http\Controllers\LaporanBarangKeluarMobilController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\JasaController;
+use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\LaporanKeluarController;
 use App\Http\Controllers\PendapatanMobilController;
 use App\Http\Controllers\ProfileController;
@@ -38,9 +39,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bulk', [BarangController::class, 'bulkUpdate'])->name('barang.bulk.update');
         Route::get('/merk-list', [BarangController::class, 'merkList'])->name('barang.merk.list');
 
-        // Report barang
-        // Route::get('/report', [BarangController::class, 'report'])->name('barang.report');
-        // Route::get('/report/excel', [BarangController::class, 'exportExcel'])->name('barang.export.excel');
         // Export barang
         Route::get('/export/pdf', [BarangController::class, 'exportPdf'])->name('barang.export.pdf');
         Route::get('/export/excel', [BarangController::class, 'exportExcel'])->name('barang.export.excel');
@@ -67,14 +65,14 @@ Route::middleware(['auth'])->group(function () {
     // =========================
     Route::prefix('laporan/mobil')->name('laporan.mobil.')->group(function () {
         // Rekap Transaksi (harian)
-        Route::get('/rekap-transaksi', [BarangKeluarMobilController::class, 'index'])->name('rekap');
-        Route::get('/rekap-transaksi/export/pdf', [BarangKeluarMobilController::class, 'exportPdf'])->name('rekap.pdf');
-        Route::get('/rekap-transaksi/export/excel', [BarangKeluarMobilController::class, 'exportExcel'])->name('rekap.excel');
+        Route::get('/rekap-transaksi', [LaporanBarangKeluarMobilController::class, 'index'])->name('rekap');
+        Route::get('/rekap-transaksi/export/pdf', [LaporanBarangKeluarMobilController::class, 'exportPdf'])->name('rekap.pdf');
+        Route::get('/rekap-transaksi/export/excel', [LaporanBarangKeluarMobilController::class, 'exportExcel'])->name('rekap.excel');
 
         // Barang Keluar (dari penjualan transbrg)
-        Route::get('/barang-keluar', [BarangKeluarMobilController::class, 'index'])->name('keluar');
-        Route::get('/barang-keluar/export/pdf', [BarangKeluarMobilController::class, 'exportPdf'])->name('keluar.pdf');
-        Route::get('/barang-keluar/export/excel', [BarangKeluarMobilController::class, 'exportExcel'])->name('keluar.excel');
+        Route::get('/barang-keluar', [LaporanBarangKeluarMobilController::class, 'index'])->name('keluar');
+        Route::get('/barang-keluar/export/pdf', [LaporanBarangKeluarMobilController::class, 'exportPdf'])->name('keluar.pdf');
+        Route::get('/barang-keluar/export/excel', [LaporanBarangKeluarMobilController::class, 'exportExcel'])->name('keluar.excel');
 
         // Pendapatan Mobil
         Route::get('/pendapatan', [PendapatanMobilController::class, 'index'])->name('pendapatan');

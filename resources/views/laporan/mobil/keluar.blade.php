@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
     <div class="container">
-        <h3 class="mb-3">Laporan Barang Keluar — Mobil (Jeret)</h3>
+        <h3 class="mb-3">Laporan Barang Keluar <small class="text-muted">(Mobil - Jeret)</small></h3>
 
         @if (session('error'))
             <div class="alert alert-warning">{{ session('error') }}</div>

@@ -14,20 +14,39 @@ class BarangKeluarController extends Controller
      */
     public function index(Request $request)
     {
-        $perPage = (int) $request->input('per_page', 25);
-        $keyword = trim((string) $request->input('keyword', ''));
-        $tanggal = $request->input('tgl');
+        // --- Validasi ringan & pembatasan paging (hindari beban berlebih) ---
+        $request->validate([
+            'keyword' => 'nullable|string|max:50',
+            'tgl' => 'nullable|date',
+            'per_page' => 'nullable|integer|min:5|max:200',
+        ]);
 
-        // First visit: tidak ada query param => paksa pakai tanggal hari ini
+        $perPage = (int) $request->input('per_page', 25);
+        $perPage = min(max($perPage, 5), 200);
+
+        $keyword = trim((string) $request->input('keyword', ''));
+
+        // --- First visit: paksa ada parameter tgl=hari ini (canonical URL) ---
         $firstVisit = !$request->hasAny(['keyword', 'tgl', 'per_page', 'page']);
         if ($firstVisit) {
-            $tanggal = now()->toDateString();
+            // Opsi A (disarankan): redirect supaya URL mengandung ?tgl=YYYY-MM-DD
+            return redirect()->route('barangkeluar.index', [
+                'tgl' => now()->toDateString(),
+                'per_page' => $perPage,
+            ]);
+
+            // Opsi B (kalau tidak mau redirect): pakai default tanpa ubah URL
+            // $tanggal = now()->toDateString();
         }
 
-        $query = BarangKeluar::with('barang');
+        // Ambil tanggal dari query (sudah divalidasi di atas)
+        $tanggal = $request->input('tgl'); // format YYYY-MM-DD (hasil validasi 'date')
+
+        // --- Base query: eager load relasi untuk hindari N+1 ---
+        $base = BarangKeluar::query()->with('barang');
 
         if ($keyword !== '') {
-            $query->whereHas('barang', function ($q) use ($keyword) {
+            $base->whereHas('barang', function ($q) use ($keyword) {
                 $q->where('items', 'like', "%{$keyword}%")
                     ->orWhere('grup', 'like', "%{$keyword}%")
                     ->orWhere('merk', 'like', "%{$keyword}%");
@@ -35,26 +54,27 @@ class BarangKeluarController extends Controller
         }
 
         if (!empty($tanggal)) {
-            $query->whereDate('tgl', $tanggal);
+            $base->whereDate('tgl', $tanggal);
         }
 
-        // totals dalam satu hit
-        $totals = (clone $query)
-            ->selectRaw('COALESCE(SUM(qty),0) as total_qty, COALESCE(SUM(qty*hrg),0) as total_value')
-            ->first();
+        // --- Totals: dihitung dari clone base query (bukan dari paginator) ---
+        // catatan: (clone $base)->sum('qty') langsung compile jadi agregat SQL
+        $totalQty = (clone $base)->sum('qty');
+        $totalValue = (clone $base)->selectRaw('SUM(qty * hrg) as s')->value('s') ?? 0;
 
-        $barangkeluar = $query->orderByDesc('tgl')
+        // --- Listing: order stabil (tgl DESC, id DESC) + pagination aman ---
+        $barangkeluar = $base->orderByDesc('tgl')->orderByDesc('id')
             ->paginate($perPage)
             ->withQueryString();
 
         return view('barangkeluar.index', [
             'barangkeluar' => $barangkeluar,
             'keyword' => $keyword,
-            'tanggal' => $tanggal,        // <= pastikan dikirim ke blade
+            'tanggal' => $tanggal,   // kirim ke blade untuk isi default input date
             'perPage' => $perPage,
-            'totalQty' => $totals->total_qty,
-            'totalValue' => $totals->total_value,
-            'isDefaultToday' => $firstVisit,    // opsional, kalau mau dipakai di UI
+            'totalQty' => $totalQty,
+            'totalValue' => $totalValue,
+            'isDefaultToday' => $firstVisit, // dipakai kalau kamu aktifkan Opsi B
         ]);
     }
 
@@ -79,17 +99,16 @@ class BarangKeluarController extends Controller
             'hrg' => 'required|numeric|min:0',
         ]);
 
-        // Proses dalam transaksi agar konsisten
-        DB::beginTransaction();
-        try {
-            $barang = Barang::findOrFail($request->idbarang);
+        return DB::transaction(function () use ($request) {
+            // Kunci baris barang yg akan diubah
+            $barang = Barang::whereKey($request->idbarang)->lockForUpdate()->firstOrFail();
 
-            // Cek stok cukup
+            // Cek stok cukup (di server, bukan hanya UI)
             if ($barang->qty < $request->qty) {
                 return back()->withInput()->with('error', 'Stok barang tidak mencukupi.');
             }
 
-            // Simpan barang keluar
+            // Simpan header/detail barang keluar
             BarangKeluar::create([
                 'idbarang' => $request->idbarang,
                 'tgl' => $request->tgl,
@@ -97,16 +116,18 @@ class BarangKeluarController extends Controller
                 'hrg' => $request->hrg,
             ]);
 
-            // Update stok di tabel barang
-            $barang->decrement('qty', $request->qty);
+            // Kurangi stok dengan guard qty >= ? untuk jaga-jaga
+            $affected = Barang::whereKey($barang->id)
+                ->where('qty', '>=', $request->qty)
+                ->decrement('qty', $request->qty);
 
-            DB::commit();
+            if ($affected === 0) {
+                // keadaan balapan ekstrem (nyaris mustahil krn lock), tapi kita aman-kan
+                throw new \RuntimeException('Gagal mengurangi stok: stok berubah.');
+            }
 
             return redirect()->route('barangkeluar.index')->with('success', 'Data barang keluar berhasil ditambahkan.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
+        }, 3); // retry 3x otomatis jika deadlock
     }
 
     /**
@@ -138,23 +159,17 @@ class BarangKeluarController extends Controller
      */
     public function destroy($id)
     {
-        DB::beginTransaction();
-        try {
-            $barangKeluar = BarangKeluar::findOrFail($id);
-            $barang = Barang::findOrFail($barangKeluar->idbarang);
+        return DB::transaction(function () use ($id) {
+            $barangKeluar = BarangKeluar::lockForUpdate()->findOrFail($id); // kunci record keluar-nya
 
-            // Kembalikan qty ke stok barang
+            $barang = Barang::whereKey($barangKeluar->idbarang)->lockForUpdate()->firstOrFail();
+            // Kembalikan stok
             $barang->increment('qty', $barangKeluar->qty);
 
             // Hapus data barang keluar
             $barangKeluar->delete();
 
-            DB::commit();
-
             return redirect()->route('barangkeluar.index')->with('success', 'Data barang keluar berhasil dihapus.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->route('barangkeluar.index')->with('error', 'Gagal menghapus data: ' . $e->getMessage());
-        }
+        }, 3);
     }
 }
