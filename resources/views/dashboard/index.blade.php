@@ -9,6 +9,7 @@
             'pusat' => 'pusat',
             'jeret' => 'mobil',
             'jayanti timur' => 'jayanti_timur',
+            'ruko' => 'ruko',
         ];
     @endphp
 
@@ -36,7 +37,7 @@
         {{-- Kartu per cabang --}}
         <div class="row">
             @foreach ($stats as $cabang => $data)
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card shadow-sm mb-4">
                         <div class="card-body">
                             <h5 class="card-title text-primary text-capitalize">
@@ -113,7 +114,7 @@
 
     <div class="row">
         @foreach ($tren as $nama => $t)
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -168,8 +169,8 @@
     </script>
 
     <div class="row mt-3">
-        @foreach (['pusat', 'jeret', 'jayanti timur'] as $cab)
-            <div class="col-md-4">
+        @foreach (['pusat', 'jeret', 'jayanti timur', 'ruko'] as $cab)
+            <div class="col-md-3">
                 <div class="card mb-3">
                     <div class="card-header">
                         Top 5 Fast Movers — <span class="text-capitalize">{{ $cab }}</span>

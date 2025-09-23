@@ -31,6 +31,7 @@ class DashboardController extends Controller
             'pusat' => $this->kpiKeluar('keluar', 'barang', $awal, $akhir),
             'jeret' => $this->kpiMobil($awal, $akhir),
             'jayanti timur' => $this->kpiKeluar('keluar_jt', 'barang_jt', $awal, $akhir),
+            'ruko' => $this->kpiKeluar('keluar_ruko', 'barang_ruko', $awal, $akhir),
         ];
 
         // Tren harian qty (periode)
@@ -38,6 +39,7 @@ class DashboardController extends Controller
             'pusat' => $this->trenHarian('keluar', 'tgl', 'qty', $awal, $akhir),
             'jeret' => $this->trenHarianMobil($awal, $akhir),
             'jayanti timur' => $this->trenHarian('keluar_jt', 'tgl', 'qty', $awal, $akhir),
+            'ruko' => $this->trenHarian('keluar_ruko', 'tgl', 'qty', $awal, $akhir),
         ];
 
         // Daftar top movers & stok kritis per cabang
@@ -45,11 +47,13 @@ class DashboardController extends Controller
             'pusat' => $this->topKeluar('keluar', 'barang', $awal, $akhir, 5),
             'jeret' => $this->topKeluarMobil($awal, $akhir, 5),
             'jayanti timur' => $this->topKeluar('keluar_jt', 'barang_jt', $awal, $akhir, 5),
+            'ruko' => $this->topKeluar('keluar_ruko', 'barang_ruko', $awal, $akhir, 5),
         ];
         $kritis = [
             'pusat' => $this->stokKritis('barang', 5),
             'jeret' => $this->stokKritis('barang_jeret', 5),
             'jayanti timur' => $this->stokKritis('barang_jt', 5),
+            'ruko' => $this->stokKritis('barang_ruko', 5),
         ];
 
         return view('dashboard.index', compact('stats', 'awal', 'akhir', 'kpi', 'tren', 'fastMovers', 'kritis'));
@@ -61,6 +65,7 @@ class DashboardController extends Controller
             'pusat' => 'barang',
             'jeret' => 'barang_jeret',
             'jayanti timur' => 'barang_jt',
+            'ruko' => 'barang_ruko',
         ];
 
         $stats = [];
