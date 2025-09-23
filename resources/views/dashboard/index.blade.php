@@ -8,7 +8,7 @@
         $lokasiMap = [
             'pusat' => 'pusat',
             'jeret' => 'mobil',
-            'jayanti timur' => 'jt',
+            'jayanti timur' => 'jayanti_timur',
         ];
     @endphp
 

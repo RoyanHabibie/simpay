@@ -180,6 +180,7 @@ class BarangController extends Controller
             'pusat' => 'barang',
             'jeret', 'mobil' => 'barang_jeret',
             'jayanti_timur' => 'barang_jt',
+            'ruko' => 'barang_ruko',
             default => abort(404, 'Cabang tidak dikenal'),
         };
     }
@@ -269,6 +270,7 @@ class BarangController extends Controller
             'pusat' => 'Pusat (Motor)',
             'jeret', 'mobil' => 'Mobil (Jeret)',
             'jayanti_timur' => 'Jayanti Timur (Motor)',
+            'ruko' => 'Ruko (Motor)',
             default => ucfirst($cabang),
         };
         return [$table, $title];

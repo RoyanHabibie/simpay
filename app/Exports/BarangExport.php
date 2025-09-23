@@ -74,7 +74,8 @@ class BarangExport implements FromQuery, WithHeadings, WithMapping, WithCustomCh
         return match ($key) {
             'pusat'         => ['barang',      'Pusat (Motor)'],
             'jeret'         => ['barang_jeret','Mobil (Jeret)'],
-            'jayanti timur' => ['barang_jt',   'Jayanti Timur (Motor)'],
+            'jayanti_timur' => ['barang_jt',   'Jayanti Timur (Motor)'],
+            'ruko'          => ['barang_ruko', 'Ruko (Motor)'],
             default         => ['barang',      ucfirst($cabang)],
         };
     }

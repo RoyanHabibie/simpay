@@ -15,7 +15,7 @@ class LaporanKeluarController extends Controller
         $r->validate([
             'awal' => 'nullable|date',
             'akhir' => 'nullable|date',
-            'lokasi' => 'nullable|in:pusat,jt,jeret',
+            'lokasi' => 'nullable|in:pusat,jt,jeret,ruko',
             'cari' => 'nullable|string|max:50',
             'mode' => 'nullable|in:detail,rekap',
             'status' => 'nullable|string|max:20', // dipakai hanya untuk mobil
@@ -148,10 +148,17 @@ class LaporanKeluarController extends Controller
 
     private function resolveTables(string $lokasi): array
     {
-        // untuk pusat & jt saja; mobil pakai transbrg
-        return $lokasi === 'jt'
-            ? ['keluar_jt', 'barang_jt']
-            : ['keluar', 'barang']; // default pusat
+        switch ($lokasi) {
+            case 'jt':
+                return ['keluar_jt', 'barang_jt'];
+            case 'ruko':
+                return ['keluar_ruko', 'barang_ruko'];
+            case 'pusat':
+                return ['keluar', 'barang'];
+            default:
+                // fallback pusat
+                return ['keluar', 'barang'];
+        }
     }
 
     private function buildDetailQuery(string $lokasi, string $awal, string $akhir, string $cari, string $status)

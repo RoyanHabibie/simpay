@@ -45,6 +45,8 @@
                                     href="{{ route('barang.index', 'jeret') }}">Barang Jeret</a></li>
                             <li><a class="dropdown-item {{ $currentCabang === 'jayanti_timur' ? 'active' : '' }}"
                                     href="{{ route('barang.index', 'jayanti_timur') }}">Barang Jayanti Timur</a></li>
+                            <li><a class="dropdown-item {{ $currentCabang === 'ruko' ? 'active' : '' }}"
+                                    href="{{ route('barang.index', 'ruko') }}">Barang Ruko</a></li>
                         </ul>
                     </li>
 
@@ -127,6 +129,20 @@
                                 <a class="dropdown-item {{ request()->fullUrlIs('*lokasi=jt*') ? 'active' : '' }}"
                                     href="{{ route('laporan.keluar', [
                                         'lokasi' => 'jt',
+                                        'awal' => now()->toDateString(),
+                                        'akhir' => now()->toDateString(),
+                                        'mode' => 'detail',
+                                    ]) }}">
+                                    Barang Keluar
+                                </a>
+                            </li>
+
+                            <!-- Ruko -->
+                            <li class="dropdown-header">Ruko</li>
+                            <li>
+                                <a class="dropdown-item {{ request()->fullUrlIs('*lokasi=ruko*') ? 'active' : '' }}"
+                                    href="{{ route('laporan.keluar', [
+                                        'lokasi' => 'ruko',
                                         'awal' => now()->toDateString(),
                                         'akhir' => now()->toDateString(),
                                         'mode' => 'detail',
