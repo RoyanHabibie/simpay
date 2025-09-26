@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\BarangKeluarController;
 use App\Http\Controllers\LaporanBarangKeluarMobilController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\LaporanKeluarController;
 use App\Http\Controllers\PendapatanMobilController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -18,6 +20,9 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Manage Users
+    Route::resource('users', UserController::class);
 
     // Profile dari Breeze
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -48,7 +53,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('jasa', JasaController::class);
 
     // Barang keluar (pusat)
-    Route::resource('barangkeluar', BarangKeluarController::class);
+    Route::prefix('{cabang}')->group(function () {
+        Route::resource('barangkeluar', BarangKeluarController::class);
+    });
 
     // =========================
     // L A P O R A N  (puasat dan jayanti timur)

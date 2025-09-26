@@ -1,10 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        $cabang = request()->route('cabang'); // ambil parameter dari route
+    @endphp
     <div class="container">
-        <h2 class="mb-4">Tambah Barang Keluar</h2>
+        <h2 class="mb-4">Tambah Barang Keluar - {{ ucfirst($cabang) }}</h2>
 
-        <form action="{{ route('barangkeluar.store') }}" method="POST">
+        <form action="{{ route('barangkeluar.store', ['cabang' => $cabang]) }}" method="POST">
             @csrf
 
             {{-- Hidden ID barang --}}
@@ -65,7 +68,7 @@
             </div>
 
             <button type="submit" class="btn btn-success">Simpan</button>
-            <a href="{{ route('barangkeluar.index') }}" class="btn btn-secondary">Batal</a>
+            <a href="{{ route('barangkeluar.index', ['cabang' => $cabang]) }}" class="btn btn-secondary">Batal</a>
         </form>
 
         {{-- Modal Barang --}}

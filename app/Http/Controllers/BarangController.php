@@ -64,6 +64,10 @@ class BarangController extends Controller
 
     public function create($cabang)
     {
+        if (auth()->user()->role !== 'pusat') {
+            abort(403, 'Anda tidak berhak mengakses halaman ini.');
+        }
+
         return view('barang.create', compact('cabang'));
     }
 

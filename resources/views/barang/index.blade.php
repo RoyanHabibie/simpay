@@ -16,16 +16,18 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Data Barang - {{ ucfirst($cabang) }}</h2>
-        <div class="btn-group">
-            <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#bulkPriceModal">
-                Update Harga Massal
-            </button>
-            <a href="{{ route('barang.export.pdf', array_merge(['cabang' => $cabang], request()->only('keyword'))) }}"
-                class="btn btn-outline-danger">Export PDF</a>
-            <a href="{{ route('barang.export.excel', array_merge(['cabang' => $cabang], request()->only('keyword'))) }}"
-                class="btn btn-outline-success">Export Excel</a>
-            <a href="{{ route('barang.create', $cabang) }}" class="btn btn-primary">+ Tambah Barang</a>
-        </div>
+        @if (Auth::user()->role === 'pusat')
+            <div class="btn-group">
+                <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#bulkPriceModal">
+                    Update Harga Massal
+                </button>
+                <a href="{{ route('barang.export.pdf', array_merge(['cabang' => $cabang], request()->only('keyword'))) }}"
+                    class="btn btn-outline-danger">Export PDF</a>
+                <a href="{{ route('barang.export.excel', array_merge(['cabang' => $cabang], request()->only('keyword'))) }}"
+                    class="btn btn-outline-success">Export Excel</a>
+                <a href="{{ route('barang.create', $cabang) }}" class="btn btn-primary">+ Tambah Barang</a>
+            </div>
+        @endif
     </div>
 
     <!-- Form Pencarian -->
@@ -64,7 +66,9 @@
                     <th>Harga Modal</th>
                     <th>Harga Agen</th>
                     <th>Harga Ecer</th>
-                    <th>Aksi</th>
+                    @if (Auth::user()->role === 'pusat')
+                        <th>Aksi</th>
+                    @endif
                 </tr>
             </thead>
 
@@ -81,21 +85,23 @@
                         <td>Rp {{ number_format($b->hrgmodal, 0, ',', '.') }}</td>
                         <td>Rp {{ number_format($b->hrgagen, 0, ',', '.') }}</td>
                         <td>Rp {{ number_format($b->hrgecer, 0, ',', '.') }}</td>
-                        <td>
-                            <a href="{{ route('barang.edit', [$cabang, $b->id]) }}" class="btn btn-sm btn-warning"
-                                data-bs-toggle="tooltip" title="Edit Barang">
-                                <i class="bi bi-pencil"></i>
-                            </a>
+                        @if (Auth::user()->role === 'pusat')
+                            <td>
+                                <a href="{{ route('barang.edit', [$cabang, $b->id]) }}" class="btn btn-sm btn-warning"
+                                    data-bs-toggle="tooltip" title="Edit Barang">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
 
-                            <form action="{{ route('barang.destroy', [$cabang, $b->id]) }}" method="POST"
-                                class="d-inline">
-                                @csrf @method('DELETE')
-                                <button type="submit" onclick="return confirm('Yakin ingin hapus?')"
-                                    class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="Hapus Barang">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </td>
+                                <form action="{{ route('barang.destroy', [$cabang, $b->id]) }}" method="POST"
+                                    class="d-inline">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" onclick="return confirm('Yakin ingin hapus?')"
+                                        class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="Hapus Barang">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        @endif
                     </tr>
                 @empty
                     <tr>

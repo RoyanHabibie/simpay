@@ -1,9 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        $cabang = request()->route('cabang'); // ambil parameter dari route
+    @endphp
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Data Barang Keluar</h2>
-        <a href="{{ route('barangkeluar.create') }}" class="btn btn-primary">+ Tambah Transaksi</a>
+        <h2>Data Barang Keluar - {{ ucfirst($cabang) }}</h2>
+        <a href="{{ route('barangkeluar.create', ['cabang' => $cabang]) }}" class="btn btn-primary">+ Tambah Transaksi</a>
     </div>
 
     <!-- Pencarian & Filter -->
@@ -19,7 +22,7 @@
 
             {{-- Tombol reset filter tanggal --}}
             @if (request()->has('tgl'))
-                <a href="{{ route('barangkeluar.index', array_merge(request()->except('tgl'))) }}"
+                <a href="{{ route('barangkeluar.index', array_merge(['cabang' => $cabang], request()->except('tgl'))) }}"
                     class="btn btn-outline-danger" title="Reset tanggal">✕</a>
             @endif
         </div>
@@ -71,8 +74,14 @@
                             {{-- <a href="{{ route('barangkeluar.edit', $item->id) }}" class="btn btn-sm btn-warning">
                                 <i class="bi bi-pencil"></i>
                             </a> --}}
-                            <form action="{{ route('barangkeluar.destroy', $item->id) }}" method="POST" class="d-inline">
-                                @csrf @method('DELETE')
+                            <form
+                                action="{{ route('barangkeluar.destroy', [
+                                    'cabang' => $cabang,
+                                    'barangkeluar' => $item->id,
+                                ]) }}"
+                                method="POST" class="d-inline">
+                                @csrf
+                                @method('DELETE')
                                 <button class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus data?')">
                                     <i class="bi bi-trash"></i>
                                 </button>

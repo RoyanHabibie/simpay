@@ -30,7 +30,7 @@ class DashboardController extends Controller
         $kpi = [
             'pusat' => $this->kpiKeluar('keluar', 'barang', $awal, $akhir),
             'jeret' => $this->kpiMobil($awal, $akhir),
-            'jayanti timur' => $this->kpiKeluar('keluar_jt', 'barang_jt', $awal, $akhir),
+            'jt' => $this->kpiKeluar('keluar_jt', 'barang_jt', $awal, $akhir),
             'ruko' => $this->kpiKeluar('keluar_ruko', 'barang_ruko', $awal, $akhir),
         ];
 
@@ -38,7 +38,7 @@ class DashboardController extends Controller
         $tren = [
             'pusat' => $this->trenHarian('keluar', 'tgl', 'qty', $awal, $akhir),
             'jeret' => $this->trenHarianMobil($awal, $akhir),
-            'jayanti timur' => $this->trenHarian('keluar_jt', 'tgl', 'qty', $awal, $akhir),
+            'jt' => $this->trenHarian('keluar_jt', 'tgl', 'qty', $awal, $akhir),
             'ruko' => $this->trenHarian('keluar_ruko', 'tgl', 'qty', $awal, $akhir),
         ];
 
@@ -46,13 +46,13 @@ class DashboardController extends Controller
         $fastMovers = [
             'pusat' => $this->topKeluar('keluar', 'barang', $awal, $akhir, 5),
             'jeret' => $this->topKeluarMobil($awal, $akhir, 5),
-            'jayanti timur' => $this->topKeluar('keluar_jt', 'barang_jt', $awal, $akhir, 5),
+            'jt' => $this->topKeluar('keluar_jt', 'barang_jt', $awal, $akhir, 5),
             'ruko' => $this->topKeluar('keluar_ruko', 'barang_ruko', $awal, $akhir, 5),
         ];
         $kritis = [
             'pusat' => $this->stokKritis('barang', 5),
             'jeret' => $this->stokKritis('barang_jeret', 5),
-            'jayanti timur' => $this->stokKritis('barang_jt', 5),
+            'jt' => $this->stokKritis('barang_jt', 5),
             'ruko' => $this->stokKritis('barang_ruko', 5),
         ];
 
@@ -64,7 +64,7 @@ class DashboardController extends Controller
         $cabangList = [
             'pusat' => 'barang',
             'jeret' => 'barang_jeret',
-            'jayanti timur' => 'barang_jt',
+            'jt' => 'barang_jt',
             'ruko' => 'barang_ruko',
         ];
 
