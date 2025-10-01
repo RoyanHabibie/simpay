@@ -66,7 +66,7 @@
                     <tr>
                         <td>{{ ($barangkeluar->currentPage() - 1) * $barangkeluar->perPage() + $index + 1 }}</td>
                         <td>{{ \Carbon\Carbon::parse($item->tgl)->format('d-m-Y') }}</td>
-                        <td>{{ $item->barang->items ?? 'Barang tidak ditemukan' }}</td>
+                        <td>{{ $item->items ?? 'Barang tidak ditemukan' }}</td>
                         <td>{{ $item->qty }}</td>
                         <td>Rp {{ number_format($item->hrg, 0, ',', '.') }}</td>
                         <td>Rp {{ number_format($item->qty * $item->hrg, 0, ',', '.') }}</td>
