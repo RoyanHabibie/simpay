@@ -23,7 +23,7 @@ class LaporanKeluarController extends Controller
 
         $awal = $r->input('awal', now()->toDateString());
         $akhir = $r->input('akhir', now()->toDateString());
-        $lokasi = $r->input('lokasi', 'pusat');     // pusat | jt | mobil
+        $lokasi = $r->input('lokasi', 'pusat');     // pusat | jt | mobil | ruko
         $cari = trim($r->input('cari', ''));
         $mode = $r->input('mode', 'detail');      // detail | rekap
         $status = $r->input('status', 'semua');     // hanya untuk mobil
@@ -105,7 +105,7 @@ class LaporanKeluarController extends Controller
     {
         $awal = $r->input('awal', now()->toDateString());
         $akhir = $r->input('akhir', now()->toDateString());
-        $lokasi = $r->input('lokasi', 'pusat');     // pusat | jt | mobil
+        $lokasi = $r->input('lokasi', 'pusat');     // pusat | jt | mobil | ruko
         $cari = trim($r->input('cari', ''));
         $mode = $r->input('mode', 'detail');      // detail | rekap
         $status = $r->input('status', 'semua');     // dipakai hanya untuk mobil
@@ -190,7 +190,7 @@ class LaporanKeluarController extends Controller
             ");
         }
 
-        // pusat / jt
+        // pusat / jt / ruko
         [$tblKeluar, $tblBarang] = $this->resolveTables($lokasi);
         $q = DB::table("$tblKeluar as k")
             ->join("$tblBarang as b", 'k.idbarang', '=', 'b.id')
@@ -245,7 +245,7 @@ class LaporanKeluarController extends Controller
                 ->orderByDesc('qty');
         }
 
-        // pusat / jt
+        // pusat / jt / ruko
         [$tblKeluar, $tblBarang] = $this->resolveTables($lokasi);
         $q = DB::table("$tblKeluar as k")
             ->join("$tblBarang as b", 'k.idbarang', '=', 'b.id')

@@ -58,10 +58,10 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // =========================
-    // L A P O R A N  (puasat dan jayanti timur)
+    // L A P O R A N  (puasat, jayanti timur, ruko)
     // =========================
     Route::prefix('laporan')->name('laporan.')->group(function () {
-        // ?lokasi=pusat|jt&awal=YYYY-MM-DD&akhir=YYYY-MM-DD&cari=...&mode=detail|rekap
+        // ?lokasi=pusat|jt|ruko&awal=YYYY-MM-DD&akhir=YYYY-MM-DD&cari=...&mode=detail|rekap
         Route::get('/keluar', [LaporanKeluarController::class, 'index'])->name('keluar');
         Route::get('/keluar/export/pdf', [LaporanKeluarController::class, 'exportPdf'])->name('keluar.pdf');
         Route::get('/keluar/export/excel', [LaporanKeluarController::class, 'exportExcel'])->name('keluar.excel');

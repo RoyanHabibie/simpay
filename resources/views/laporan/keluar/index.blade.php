@@ -31,6 +31,7 @@
                     <option value="pusat" {{ $lokasi === 'pusat' ? 'selected' : '' }}>Pusat (Motor)</option>
                     <option value="jeret" {{ $lokasi === 'jeret' ? 'selected' : '' }}>Jeret (Mobil)</option>
                     <option value="jt" {{ $lokasi === 'jt' ? 'selected' : '' }}>Jayanti Timur (Motor)</option>
+                    <option value="ruko" {{ $lokasi === 'ruko' ? 'selected' : '' }}>Ruko (Motor)</option>
                 </select>
             </div>
             <div class="col-auto">
