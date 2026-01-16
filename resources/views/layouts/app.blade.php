@@ -57,8 +57,8 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {{ $currentCabang === 'jt' ? 'active' : '' }}"
-                                        href="{{ route('barang.index', 'jt') }}">
+                                    <a class="dropdown-item {{ $currentCabang === 'jayanti_timur' ? 'active' : '' }}"
+                                        href="{{ route('barang.index', 'jayanti_timur') }}">
                                         Barang Jayanti Timur
                                     </a>
                                 </li>
@@ -79,10 +79,10 @@
                                     </li>
                                 @endif
 
-                                @if (Auth::user()->role === 'jt')
+                                @if (Auth::user()->role === 'jayanti_timur')
                                     <li>
                                         <a class="dropdown-item {{ $currentCabang === 'jt' ? 'active' : '' }}"
-                                            href="{{ route('barang.index', 'jt') }}">
+                                            href="{{ route('barang.index', 'jayanti_timur') }}">
                                             Barang Jayanti Timur
                                         </a>
                                     </li>
