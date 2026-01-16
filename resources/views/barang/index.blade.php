@@ -73,6 +73,21 @@
             </thead>
 
             <tbody>
+                @php
+                    $discLabel = function ($list, $price) {
+                        $list = (float) $list;
+                        $price = (float) $price;
+                        if ($list <= 0) {
+                            return null;
+                        }
+                        $disc = round((1 - $price / $list) * 100, 2);
+                        if ($disc < 0) {
+                            return 'Markup ' . abs($disc) . '%';
+                        }
+                        return 'Disc ' . $disc . '%';
+                    };
+                @endphp
+
                 @forelse($barang as $index => $b)
                     <tr>
                         <td>{{ ($barang->currentPage() - 1) * $barang->perPage() + $index + 1 }}</td>
@@ -82,9 +97,27 @@
                         <td>{{ $b->lokasi }}</td>
                         <td>{{ $b->qty }}</td>
                         <td>Rp {{ number_format($b->hrglist, 0, ',', '.') }}</td>
-                        <td>Rp {{ number_format($b->hrgmodal, 0, ',', '.') }}</td>
-                        <td>Rp {{ number_format($b->hrgagen, 0, ',', '.') }}</td>
-                        <td>Rp {{ number_format($b->hrgecer, 0, ',', '.') }}</td>
+                        <td>
+                            Rp {{ number_format($b->hrgmodal, 0, ',', '.') }}
+                            @php $lbl = $discLabel($b->hrglist, $b->hrgmodal); @endphp
+                            @if ($lbl)
+                                <small class="text-muted d-block">{{ $lbl }}</small>
+                            @endif
+                        </td>
+                        <td>
+                            Rp {{ number_format($b->hrgagen, 0, ',', '.') }}
+                            @php $lbl = $discLabel($b->hrglist, $b->hrgagen); @endphp
+                            @if ($lbl)
+                                <small class="text-muted d-block">{{ $lbl }}</small>
+                            @endif
+                        </td>
+                        <td>
+                            Rp {{ number_format($b->hrgecer, 0, ',', '.') }}
+                            @php $lbl = $discLabel($b->hrglist, $b->hrgecer); @endphp
+                            @if ($lbl)
+                                <small class="text-muted d-block">{{ $lbl }}</small>
+                            @endif
+                        </td>
                         @if (Auth::user()->role === 'pusat')
                             <td>
                                 <a href="{{ route('barang.edit', [$cabang, $b->id]) }}" class="btn btn-sm btn-warning"
@@ -163,7 +196,7 @@
                         </div>
                     </div>
 
-                    <div class="row g-2 mt-2">
+                    {{-- <div class="row g-2 mt-2">
                         <div class="col-6">
                             <label class="form-label">Pembulatan ke kelipatan</label>
                             <select name="round_step" class="form-select">
@@ -183,7 +216,7 @@
                                 <option value="floor">Ke bawah</option>
                             </select>
                         </div>
-                    </div>
+                    </div> --}}
 
                     <div class="form-check mt-3">
                         <input class="form-check-input" type="checkbox" value="1" id="chkKonfirmasi"

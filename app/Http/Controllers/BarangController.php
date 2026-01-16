@@ -342,14 +342,14 @@ class BarangController extends Controller
         $updates = [];
 
         if ($r->filled('disc_modal')) {
-            $f = 1 + ((float) $r->disc_modal / 100.0); // misal -10 → 0.9
+            $f = 1 - ((float) $r->disc_modal / 100.0); // misal -10 → 0.9
             // pastikan tidak negatif: GREATEST(…,0)
             $expr = "GREATEST(" . $this->roundExpr("hrgmodal * $f", $roundStep, $roundMode) . ", 0)";
             $updates['hrgmodal'] = DB::raw($expr);
         }
 
         if ($r->filled('disc_agen')) {
-            $f = 1 + ((float) $r->disc_agen / 100.0);
+            $f = 1 - ((float) $r->disc_agen / 100.0);
             $expr = "GREATEST(" . $this->roundExpr("hrgagen * $f", $roundStep, $roundMode) . ", 0)";
             $updates['hrgagen'] = DB::raw($expr);
         }
