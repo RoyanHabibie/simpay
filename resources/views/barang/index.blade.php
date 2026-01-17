@@ -73,7 +73,7 @@
             </thead>
 
             <tbody>
-                @php
+                {{-- @php
                     $discLabel = function ($list, $price) {
                         $list = (float) $list;
                         $price = (float) $price;
@@ -86,7 +86,7 @@
                         }
                         return 'Disc ' . $disc . '%';
                     };
-                @endphp
+                @endphp --}}
 
                 @forelse($barang as $index => $b)
                     <tr>
@@ -99,24 +99,24 @@
                         <td>Rp {{ number_format($b->hrglist, 0, ',', '.') }}</td>
                         <td>
                             Rp {{ number_format($b->hrgmodal, 0, ',', '.') }}
-                            @php $lbl = $discLabel($b->hrglist, $b->hrgmodal); @endphp
+                            {{-- @php $lbl = $discLabel($b->hrglist, $b->hrgmodal); @endphp
                             @if ($lbl)
                                 <small class="text-muted d-block">{{ $lbl }}</small>
-                            @endif
+                            @endif --}}
                         </td>
                         <td>
                             Rp {{ number_format($b->hrgagen, 0, ',', '.') }}
-                            @php $lbl = $discLabel($b->hrglist, $b->hrgagen); @endphp
+                            {{-- @php $lbl = $discLabel($b->hrglist, $b->hrgagen); @endphp
                             @if ($lbl)
                                 <small class="text-muted d-block">{{ $lbl }}</small>
-                            @endif
+                            @endif --}}
                         </td>
                         <td>
                             Rp {{ number_format($b->hrgecer, 0, ',', '.') }}
-                            @php $lbl = $discLabel($b->hrglist, $b->hrgecer); @endphp
+                            {{-- @php $lbl = $discLabel($b->hrglist, $b->hrgecer); @endphp
                             @if ($lbl)
                                 <small class="text-muted d-block">{{ $lbl }}</small>
-                            @endif
+                            @endif --}}
                         </td>
                         @if (Auth::user()->role === 'pusat')
                             <td>
