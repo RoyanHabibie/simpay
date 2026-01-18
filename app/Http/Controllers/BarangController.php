@@ -341,20 +341,18 @@ class BarangController extends Controller
         // Siapkan ekspresi update
         $updates = [];
 
-        if ($r->filled('disc_modal')) {
-            $f = 1 - ((float) $r->disc_modal / 100.0); // misal -10 → 0.9
-            // pastikan tidak negatif: GREATEST(…,0)
-            $expr = "GREATEST(" . $this->roundExpr("hrgmodal * $f", $roundStep, $roundMode) . ", 0)";
+        if ($r->has('disc_modal') && $r->disc_modal !== null && $r->disc_modal !== '') {
+            $f = 1 - ((float) $r->disc_modal / 100.0);
+            $expr = "GREATEST(" . $this->roundExpr("hrglist * $f", $roundStep, $roundMode) . ", 0)";
             $updates['hrgmodal'] = DB::raw($expr);
         }
 
-        if ($r->filled('disc_agen')) {
+        if ($r->has('disc_agen') && $r->disc_agen !== null && $r->disc_agen !== '') {
             $f = 1 - ((float) $r->disc_agen / 100.0);
-            $expr = "GREATEST(" . $this->roundExpr("hrgagen * $f", $roundStep, $roundMode) . ", 0)";
+            $expr = "GREATEST(" . $this->roundExpr("hrglist * $f", $roundStep, $roundMode) . ", 0)";
             $updates['hrgagen'] = DB::raw($expr);
         }
 
-        // Kalau tidak ada field yang diubah
         if (empty($updates)) {
             return back()->with('error', 'Tidak ada perubahan harga yang dipilih.');
         }
